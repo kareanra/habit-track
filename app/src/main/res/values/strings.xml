@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Habit Track</string>
+    <string name="load_habits">Load Habits</string>
+    <string name="clear_lists">Clear Habits</string>
+    <string name="new_habit">New Habit</string>
+    <string name="loading">Loading…</string>
+</resources>
