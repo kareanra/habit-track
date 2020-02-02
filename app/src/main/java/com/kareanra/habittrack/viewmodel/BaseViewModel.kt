@@ -13,6 +13,12 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.fold
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.reduce
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
@@ -49,11 +55,17 @@ abstract class BaseViewModel<I : BaseViewModel.Intent, R : BaseViewModel.Result,
         }
         // bind results to new states
         launch {
-            resultFlows.consumeEach { flow ->
-                flow.collect { result ->
-                    _states.send(reducer.reduce(currentState, result))
+            resultFlows.consumeAsFlow()
+                .flattenConcat()
+                .map { reducer.reduce(currentState, it) }
+                .distinctUntilChanged()
+                .collect {
+                    _states.send(it)
                 }
-            }
+//                flow.collect { result ->
+//                    _states.send(reducer.reduce(currentState, result))
+//                }
+//            }
         }
     }
 

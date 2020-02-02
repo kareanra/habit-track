@@ -13,7 +13,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ReceiveChannel
 
-class RecyclerAdapter(private val habits: List<Habit>) : RecyclerView.Adapter<RecyclerAdapter.TextViewHolder>() {
+class RecyclerAdapter(
+    private val habits: List<Habit>
+) : RecyclerView.Adapter<RecyclerAdapter.TextViewHolder>() {
 
     private val _userUpdates = Channel<RecyclerViewIntent>(UNLIMITED)
     val userUpdates: ReceiveChannel<RecyclerViewIntent>

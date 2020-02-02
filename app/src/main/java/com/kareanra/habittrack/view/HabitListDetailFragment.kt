@@ -43,7 +43,7 @@ class HabitListDetailFragment : Fragment(), CoroutineScope, LifecycleOwner {
     private lateinit var recyclerAdapter: RecyclerAdapter
     private lateinit var layoutManager: RecyclerView.LayoutManager
 
-    private val habits = mutableListOf(Habit(0, "Demo"))
+    private val habits = mutableListOf(Habit(name = "Demo"))
 
     private val viewModel: HabitListViewModel by lazy {
         ViewModelProvider(this, HabitListViewModelFactory(dispatcher, reducer)).get(HabitListViewModel::class.java)

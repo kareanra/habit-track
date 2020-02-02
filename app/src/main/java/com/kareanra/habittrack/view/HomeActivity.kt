@@ -53,6 +53,9 @@ class HomeActivity : AppCompatActivity(), CoroutineScope, LifecycleOwner {
 
         (application as HabitTrackApp).daggerComponent.inject(this)
 
+        linearLayoutManager = LinearLayoutManager(this)
+        recyclerAdapter = RecyclerAdapter(habits)
+
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = recyclerAdapter
 
@@ -81,7 +84,7 @@ class HomeActivity : AppCompatActivity(), CoroutineScope, LifecycleOwner {
     private fun render(viewState: HabitListViewState) {
         when {
             viewState.loading ->
-                textField.text = getString(R.string.load_habits)
+                textField.text = getString(R.string.loading)
             viewState.error != null ->
                 Toast.makeText(this, viewState.error, Toast.LENGTH_LONG).show()
             else -> {
