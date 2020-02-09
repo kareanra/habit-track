@@ -16,18 +16,15 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flattenConcat
-import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.reduce
 import kotlinx.coroutines.launch
-import kotlin.coroutines.CoroutineContext
 
 abstract class BaseViewModel<I : BaseViewModel.Intent, R : BaseViewModel.Result, S : BaseViewModel.State>(
     initial: S,
     reducer: Reducer<S, R>
 ) : ViewModel(), CoroutineScope {
 
-    override val coroutineContext: CoroutineContext
+    override val coroutineContext
         get() = SupervisorJob() + IO
 
     interface Intent
@@ -62,17 +59,13 @@ abstract class BaseViewModel<I : BaseViewModel.Intent, R : BaseViewModel.Result,
                 .collect {
                     _states.send(it)
                 }
-//                flow.collect { result ->
-//                    _states.send(reducer.reduce(currentState, result))
-//                }
-//            }
         }
     }
-
-    protected abstract fun handleIntent(intent: I): Flow<R>
 
     override fun onCleared() {
         super.onCleared()
         coroutineContext.cancel()
     }
+
+    protected abstract fun handleIntent(intent: I): Flow<R>
 }

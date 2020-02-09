@@ -13,11 +13,14 @@ class HabitRepository(
     suspend fun update(habit: Habit) =
         dao.update(habit)
 
-    suspend fun delete(id: String) =
+    suspend fun delete(id: Long) =
         dao.delete(id)
 
     suspend fun deleteAll() =
         dao.deleteAll()
+
+    suspend fun load(id: Long): Habit =
+        dao.load(id)
 
     suspend fun loadAll(): List<Habit> =
         dao.loadAll()

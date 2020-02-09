@@ -1,6 +1,5 @@
 package com.kareanra.habittrack.view
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,46 +11,55 @@ import kotlinx.android.synthetic.main.recyclerview_item_row.view.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 
 class RecyclerAdapter(
     private val habits: List<Habit>
-) : RecyclerView.Adapter<RecyclerAdapter.TextViewHolder>() {
+) : RecyclerView.Adapter<RecyclerAdapter.RowViewHolder>() {
 
     private val _userUpdates = Channel<RecyclerViewIntent>(UNLIMITED)
     val userUpdates: ReceiveChannel<RecyclerViewIntent>
         get() = _userUpdates
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TextViewHolder {
-        return TextViewHolder(parent.inflate(R.layout.recyclerview_item_row), _userUpdates)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RowViewHolder {
+        return RowViewHolder(parent.inflate(R.layout.recyclerview_item_row), _userUpdates)
     }
 
     override fun getItemCount(): Int = habits.size
 
-    override fun onBindViewHolder(holder: TextViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RowViewHolder, position: Int) {
         val habit = habits[position]
         holder.bind(habit)
     }
 
-    class TextViewHolder(
+    class RowViewHolder(
         v: View,
-        private val userUpdates: Channel<RecyclerViewIntent>
-    ) : RecyclerView.ViewHolder(v), View.OnClickListener {
-        private var view: View = v
-        private var habit: Habit? = null
+        private val userUpdates: SendChannel<RecyclerViewIntent>
+    ) : RecyclerView.ViewHolder(v) {
+        private var row: View = v
+        private var habit: Habit? = null // TODO: lateinit
 
         init {
-            v.setOnClickListener(this)
-            // TODO: navigate to detail screen
-        }
-
-        override fun onClick(v: View) {
-            Log.i("RecyclerView", "CLICK!")
-            habit?.let { userUpdates.offer(RecyclerViewIntent.HabitDetail(it.id)) }
+            setUpClickListeners()
         }
 
         fun bind(habit: Habit) {
             this.habit = habit
-            view.habitName.text = habit.name
+            row.habitName.text = habit.name
+        }
+
+        private fun setUpClickListeners() {
+            row.habitName.setOnClickListener {
+                habit?.let {
+                    userUpdates.offer(RecyclerViewIntent.HabitClicked(it.id))
+                }
+            }
+
+            row.edit_habit.setOnClickListener {
+                habit?.let {
+                    userUpdates.offer(RecyclerViewIntent.HabitEditClicked(it.id))
+                }
+            }
         }
     }
 
@@ -63,5 +71,6 @@ fun ViewGroup.inflate(@LayoutRes layoutRes: Int, attachToRoot: Boolean = false):
 }
 
 sealed class RecyclerViewIntent {
-    class HabitDetail(val id: Long) : RecyclerViewIntent()
+    class HabitClicked(val id: Long) : RecyclerViewIntent()
+    class HabitEditClicked(val id: Long) : RecyclerViewIntent()
 }

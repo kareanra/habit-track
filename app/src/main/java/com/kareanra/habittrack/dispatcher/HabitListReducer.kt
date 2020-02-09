@@ -19,6 +19,12 @@ class HabitListReducer @Inject constructor() : Reducer<HabitListViewState, Habit
                     loading = false,
                     habits = result.habits
                 )
+            is HabitListResult.SingleResult ->
+                existingState.copy(
+                    loading = false,
+                    detailHabit = result.habit,
+                    habits = emptyList()
+                )
             is HabitListResult.Failure ->
                 existingState.copy(
                     loading = false,

@@ -4,8 +4,9 @@ import com.kareanra.habittrack.view.HomeActivity
 import com.kareanra.habittrack.di.modules.ApiModule
 import com.kareanra.habittrack.di.modules.AppModule
 import com.kareanra.habittrack.di.modules.DbModule
-import com.kareanra.habittrack.view.HabitListDetailActivity
-import com.kareanra.habittrack.view.HabitListDetailFragment
+import com.kareanra.habittrack.view.HabitDetailActivity
+import com.kareanra.habittrack.view.HabitDetailFragment
+import com.kareanra.habittrack.view.HabitListFragment
 import dagger.Component
 import javax.inject.Singleton
 
@@ -19,7 +20,9 @@ interface AppComponent {
 
     fun inject(target: HomeActivity)
 
-    fun inject(target: HabitListDetailActivity)
+    fun inject(target: HabitDetailActivity)
 
-    fun inject(target: HabitListDetailFragment)
+    fun inject(target: HabitDetailFragment)
+
+    fun inject(target: HabitListFragment)
 }

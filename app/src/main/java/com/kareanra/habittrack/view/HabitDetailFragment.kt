@@ -2,23 +2,18 @@ package com.kareanra.habittrack.view
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.Toast
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.kareanra.habittrack.HabitTrackApp
 import com.kareanra.habittrack.R
-import com.kareanra.habittrack.intent.HabitListIntent
-import com.kareanra.habittrack.model.Habit
 import com.kareanra.habittrack.dispatcher.HabitListDispatcher
 import com.kareanra.habittrack.dispatcher.HabitListReducer
+import com.kareanra.habittrack.intent.HabitListIntent
+import com.kareanra.habittrack.util.showLongToast
 import com.kareanra.habittrack.viewmodel.HabitListViewModel
 import com.kareanra.habittrack.viewmodel.factory.HabitListViewModelFactory
 import kotlinx.android.synthetic.main.fragment_detail.*
@@ -32,7 +27,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
-class HabitListDetailFragment : Fragment(), CoroutineScope, LifecycleOwner {
+class HabitDetailFragment : Fragment(), CoroutineScope {
 
     @Inject
     lateinit var dispatcher: HabitListDispatcher
@@ -40,13 +35,9 @@ class HabitListDetailFragment : Fragment(), CoroutineScope, LifecycleOwner {
     @Inject
     lateinit var reducer: HabitListReducer
 
-    private lateinit var recyclerAdapter: RecyclerAdapter
-    private lateinit var layoutManager: RecyclerView.LayoutManager
-
-    private val habits = mutableListOf(Habit(name = "Demo"))
-
     private val viewModel: HabitListViewModel by lazy {
-        ViewModelProvider(this, HabitListViewModelFactory(dispatcher, reducer)).get(HabitListViewModel::class.java)
+        ViewModelProvider(this, HabitListViewModelFactory(dispatcher, reducer))
+            .get(HabitListViewModel::class.java)
     }
 
     override val coroutineContext: CoroutineContext
@@ -65,27 +56,26 @@ class HabitListDetailFragment : Fragment(), CoroutineScope, LifecycleOwner {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // set up views
-        layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
-        recyclerAdapter = RecyclerAdapter(habits)
-
-        recyclerView.layoutManager = layoutManager
-        recyclerView.adapter = recyclerAdapter
-
-        launch(IO) {
-            recyclerAdapter.userUpdates.consumeEach {
-                Log.d("HabitListDetailFragment", "Clicked on habit $it")
-            }
-        }
-
-        view.findViewById<Button>(R.id.loadHabits).setOnClickListener {
-            viewModel.intents.offer(HabitListIntent.Load)
-        }
-
-        viewModel.intents.offer(HabitListIntent.Load)
-
         launch(Main) {
             viewModel.states.consumeEach(::render)
+        }
+
+        // initialize by loading existing habit if id present
+        arguments?.let {
+            HabitDetailFragmentArgs.fromBundle(it).habitId.value
+        }?.let {
+            viewModel.intents.offer(HabitListIntent.Detail(it))
+        }
+        
+        habit_detail_name.doAfterTextChanged {
+            // TODO: query api for existing habit with that name
+            save_habit.isEnabled = !it.isNullOrEmpty()
+        }
+
+        save_habit.setOnClickListener {
+            if (habit_detail_name.length() > 0) {
+                viewModel.intents.offer(HabitListIntent.NewHabit(habit_detail_name.text.toString()))
+            }
         }
     }
 
@@ -102,17 +92,26 @@ class HabitListDetailFragment : Fragment(), CoroutineScope, LifecycleOwner {
     override fun onDestroy() {
         super.onDestroy()
         coroutineContext.cancel()
-        recyclerAdapter.destroy()
     }
 
     private fun render(viewState: HabitListViewState) {
         when {
-            viewState.loading -> Toast.makeText(context, "Loading...", Toast.LENGTH_SHORT).show()
-            viewState.error != null -> Toast.makeText(context, viewState.error, Toast.LENGTH_LONG).show()
+            viewState.loading -> {
+                save_habit.isEnabled = false
+                habit_detail_name.isEnabled = false
+                habit_detail_name.setText(R.string.loading)
+            }
+            viewState.error != null -> {
+                context.showLongToast(viewState.error)
+            }
+            viewState.detailHabit != null -> {
+                save_habit.isEnabled = false
+                habit_detail_name.setText(viewState.detailHabit.name)
+                habit_detail_name.isEnabled = false
+            }
             else -> {
-                habits.clear()
-                habits.addAll(viewState.habits)
-                recyclerAdapter.notifyDataSetChanged()
+                habit_detail_name.isEnabled = true
+                habit_detail_name.requestFocus()
             }
         }
     }

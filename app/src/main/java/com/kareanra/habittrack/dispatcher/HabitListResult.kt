@@ -7,5 +7,6 @@ sealed class HabitListResult : BaseViewModel.Result {
     object Loading : HabitListResult()
     object NoResult : HabitListResult()
     class Results(val habits: List<Habit>) : HabitListResult()
+    class SingleResult(val habit: Habit) : HabitListResult()
     class Failure(val throwable: Throwable) : HabitListResult()
 }

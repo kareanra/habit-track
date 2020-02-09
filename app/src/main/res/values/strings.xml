@@ -4,4 +4,7 @@
     <string name="clear_habits">Clear Habits</string>
     <string name="new_habit">New Habit</string>
     <string name="loading">Loading…</string>
+    <string name="new_habit_title_hint">Habit title…</string>
+    <string name="save_habit">Save</string>
+    <string name="edit_habit">Edit</string>
 </resources>

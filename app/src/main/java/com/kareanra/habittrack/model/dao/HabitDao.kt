@@ -17,10 +17,13 @@ interface HabitDao {
     suspend fun update(habit: Habit)
 
     @Query("DELETE FROM `Habit` WHERE id = :id")
-    suspend fun delete(id: String)
+    suspend fun delete(id: Long)
 
     @Query("DELETE FROM `Habit`")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM `Habit` WHERE id = :id")
+    suspend fun load(id: Long): Habit
 
     @Query("SELECT * FROM `Habit` ORDER BY ordinal")
     suspend fun loadAll(): List<Habit>
