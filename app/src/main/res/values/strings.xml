@@ -7,4 +7,5 @@
     <string name="new_habit_title_hint">Habit title…</string>
     <string name="save_habit">Save</string>
     <string name="edit_habit">Edit</string>
+    <string name="habit_notes">Notes</string>
 </resources>

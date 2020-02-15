@@ -68,7 +68,7 @@ class HabitDetailFragment : Fragment(), CoroutineScope {
         }
         
         habit_detail_name.doAfterTextChanged {
-            // TODO: query api for existing habit with that name
+            // TODO: query api for existing habit with that name and post an intent and re-render
             save_habit.isEnabled = !it.isNullOrEmpty()
         }
 
@@ -96,7 +96,7 @@ class HabitDetailFragment : Fragment(), CoroutineScope {
 
     private fun render(viewState: HabitListViewState) {
         when {
-            viewState.loading -> {
+            viewState.toastText != null -> {
                 save_habit.isEnabled = false
                 habit_detail_name.isEnabled = false
                 habit_detail_name.setText(R.string.loading)

@@ -6,7 +6,6 @@ import com.kareanra.habittrack.model.dao.HabitDao
 class HabitRepository(
     private val dao: HabitDao
 ) {
-
     suspend fun create(habit: Habit) =
         dao.create(habit)
 

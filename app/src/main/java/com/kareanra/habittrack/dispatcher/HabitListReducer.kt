@@ -19,6 +19,11 @@ class HabitListReducer @Inject constructor() : Reducer<HabitListViewState, Habit
                     loading = false,
                     habits = result.habits
                 )
+            is HabitListResult.SaveSuccess ->
+                existingState.copy(
+                    loading = false,
+                    toastText = "Answer successfully saved"
+                )
             is HabitListResult.SingleResult ->
                 existingState.copy(
                     loading = false,

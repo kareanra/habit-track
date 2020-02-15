@@ -2,7 +2,7 @@ package com.kareanra.habittrack.di.modules
 
 import android.content.Context
 import androidx.room.Room
-import com.kareanra.habittrack.model.dao.DailyHabitDao
+import com.kareanra.habittrack.model.dao.HabitAnswerDao
 import com.kareanra.habittrack.model.dao.HabitDao
 import com.kareanra.habittrack.model.db.HabitDatabase
 import dagger.Module
@@ -22,7 +22,7 @@ class DbModule {
 
     @Provides
     @Singleton
-    fun provideDailyHabitDao(database: HabitDatabase): DailyHabitDao =
+    fun provideDailyHabitDao(database: HabitDatabase): HabitAnswerDao =
         database.dailyHabitDao()
 
     @Provides

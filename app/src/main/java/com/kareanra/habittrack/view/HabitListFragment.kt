@@ -14,8 +14,8 @@ import com.kareanra.habittrack.R
 import com.kareanra.habittrack.dispatcher.HabitListDispatcher
 import com.kareanra.habittrack.dispatcher.HabitListReducer
 import com.kareanra.habittrack.intent.HabitListIntent
-import com.kareanra.habittrack.model.Habit
 import com.kareanra.habittrack.model.LongWrapper
+import com.kareanra.habittrack.model.view.AnswerableHabitView
 import com.kareanra.habittrack.util.showLongToast
 import com.kareanra.habittrack.util.showShortToast
 import com.kareanra.habittrack.viewmodel.HabitListViewModel
@@ -47,7 +47,7 @@ class HabitListFragment : Fragment(), CoroutineScope {
             .get(HabitListViewModel::class.java)
     }
 
-    private val habits: MutableList<Habit> = mutableListOf()
+    private val habits: MutableList<AnswerableHabitView> = mutableListOf()
 
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -58,16 +58,11 @@ class HabitListFragment : Fragment(), CoroutineScope {
         (context.applicationContext as HabitTrackApp).daggerComponent.inject(this)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_list, container, false)
-    }
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+        inflater.inflate(R.layout.fragment_list, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        loadHabitsButton.setOnClickListener {
-            viewModel.intents.offer(HabitListIntent.Load)
-        }
 
         linearLayoutManager = LinearLayoutManager(context)
         recyclerAdapter = RecyclerAdapter(habits)
@@ -75,17 +70,13 @@ class HabitListFragment : Fragment(), CoroutineScope {
         recyclerView.layoutManager = linearLayoutManager
         recyclerView.adapter = recyclerAdapter
 
-        loadHabitsButton.setOnClickListener {
-            viewModel.intents.offer(HabitListIntent.Load)
-        }
-
-        clearHabitsButton.setOnClickListener {
+        clear_habits_button.setOnClickListener {
             viewModel.intents.offer(HabitListIntent.Clear)
         }
 
-        newHabitButton.setOnClickListener {
+        new_habit_button.setOnClickListener {
             val directions = HabitListFragmentDirections.listToDetail(LongWrapper(null))
-            newHabitButton.findNavController().navigate(directions)
+            new_habit_button.findNavController().navigate(directions)
         }
 
         launch {
@@ -95,17 +86,27 @@ class HabitListFragment : Fragment(), CoroutineScope {
         launch {
             recyclerAdapter.userUpdates.consumeEach {
                 when (it) {
-                    is RecyclerViewIntent.HabitEditClicked -> {
-                        val directions = HabitListFragmentDirections.listToDetail(LongWrapper(it.id))
-                        loadHabitsButton.findNavController().navigate(directions)
+                    is RecyclerViewIntent.HabitSaveClicked -> {
+                        viewModel.intents.offer(
+                            HabitListIntent.NewAnswer(
+                                habitId = it.id,
+                                answer = it.answer,
+                                notes = it.notes
+                            )
+                        )
                     }
                     is RecyclerViewIntent.HabitClicked -> {
-                        // slide down
-                        context.showShortToast("Clicked habit!")
+                        recyclerAdapter.redraw(RecyclerViewState(it.id))
                     }
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel.intents.offer(HabitListIntent.Load)
     }
 
     override fun onDestroy() {
@@ -116,8 +117,9 @@ class HabitListFragment : Fragment(), CoroutineScope {
 
     private fun render(viewState: HabitListViewState) {
         when {
-            viewState.loading ->
-                context.showShortToast(getString(R.string.loading))
+            viewState.loading -> Unit
+//            viewState.toastText != null ->
+//                context.showShortToast(viewState.toastText)
             viewState.error != null ->
                 context.showLongToast(viewState.error)
             else -> {

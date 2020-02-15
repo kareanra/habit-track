@@ -6,37 +6,42 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.ForeignKey.CASCADE
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(foreignKeys = [
-    ForeignKey(entity = Day::class, parentColumns = ["id"], childColumns = ["day_id"], onDelete = CASCADE),
-    ForeignKey(entity = Habit::class, parentColumns = ["id"], childColumns = ["habit_id"], onDelete = CASCADE)
-])
-data class DailyHabit(
+@Entity(
+    foreignKeys = [
+        ForeignKey(entity = Habit::class, parentColumns = ["id"], childColumns = ["habit_id"], onDelete = CASCADE)
+    ],
+    indices = [
+        Index(value = ["habit_id", "yyyymmdd"], unique = true)
+    ]
+)
+data class HabitAnswer(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     @ColumnInfo(name = "completed")
-    val completed: Boolean,
+    val answer: Int,
     @ColumnInfo(name = "notes")
     val notes: String?,
-    @ColumnInfo(name = "day_id", index = true)
-    val dayId: Long,
+    @ColumnInfo(name = "yyyymmdd", index = true)
+    val yyyymmdd: Int,
     @ColumnInfo(name = "habit_id", index = true)
     val habitId: Long
 ) : Parcelable {
 
     constructor(source: Parcel): this(
         id = source.readLong(),
-        completed = source.readInt() == 1,
+        answer = source.readInt(),
         notes = source.readString(),
-        dayId = source.readLong(),
+        yyyymmdd = source.readInt(),
         habitId = source.readLong()
     )
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
-        dest.writeInt(if (completed) 1 else 0)
+        dest.writeInt(answer)
         dest.writeString(notes)
-        dest.writeLong(dayId)
+        dest.writeInt(yyyymmdd)
         dest.writeLong(habitId)
     }
 
@@ -44,10 +49,10 @@ data class DailyHabit(
 
     companion object {
         @JvmField
-        val CREATOR: Parcelable.Creator<DailyHabit> = object : Parcelable.Creator<DailyHabit> {
-            override fun createFromParcel(source: Parcel): DailyHabit = DailyHabit(source)
+        val CREATOR: Parcelable.Creator<HabitAnswer> = object : Parcelable.Creator<HabitAnswer> {
+            override fun createFromParcel(source: Parcel): HabitAnswer = HabitAnswer(source)
 
-            override fun newArray(size: Int): Array<DailyHabit?> = arrayOfNulls(size)
+            override fun newArray(size: Int): Array<HabitAnswer?> = arrayOfNulls(size)
         }
     }
 }

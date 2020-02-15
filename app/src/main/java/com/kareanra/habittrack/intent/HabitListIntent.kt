@@ -5,6 +5,7 @@ import com.kareanra.habittrack.viewmodel.BaseViewModel
 sealed class HabitListIntent : BaseViewModel.Intent {
     object Load : HabitListIntent()
     class NewHabit(val name: String) : HabitListIntent()
+    class NewAnswer(val habitId: Long, val answer: Int, val notes: String) : HabitListIntent()
     class Detail(val habitId: Long) : HabitListIntent()
     object Clear : HabitListIntent()
 }
