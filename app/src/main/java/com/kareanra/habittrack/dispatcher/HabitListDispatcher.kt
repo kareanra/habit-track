@@ -32,6 +32,7 @@ class HabitListDispatcher @Inject constructor(
     private val sdf = SimpleDateFormat("yyyyMMdd", Locale.US)
 
     // TODO: check last refresh time in shared prefs?
+    // TODO: break up intents by type (habit vs. answer)
     fun dispatchIntent(intent: HabitListIntent): Flow<HabitListResult> {
         val yyyymmdd = sdf.format(Date()).toInt()
 
@@ -42,13 +43,17 @@ class HabitListDispatcher @Inject constructor(
                 }
                 is HabitListIntent.NewHabit -> {
                     habitRepository.create(
-                        Habit(name = intent.name)
+                        Habit(
+                            inputType = intent.inputType,
+                            name = intent.name
+                        )
                     )
                     emit(HabitListResult.Results(loadAll(yyyymmdd)))
                 }
                 is HabitListIntent.NewAnswer -> {
                     answerRepository.save(
                         HabitAnswer(
+                            inputType = intent.inputType,
                             answer = intent.answer,
                             yyyymmdd = yyyymmdd,
                             notes = intent.notes,
@@ -78,6 +83,7 @@ class HabitListDispatcher @Inject constructor(
                         id = it.id,
                         name = it.name
                     ),
+                    inputType = it.inputType,
                     answer = answerRepository.findByHabitAndDay(it.id, today)?.let { ans ->
                         AnswerView(
                             yyyymmdd = ans.yyyymmdd,

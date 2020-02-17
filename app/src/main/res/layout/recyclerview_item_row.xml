@@ -55,7 +55,16 @@
                 android:id="@+id/habit_seek_bar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:visibility="gone"
                 android:max="10"/>
+
+            <EditText
+                android:id="@+id/habit_numerical_input"
+                android:layout_width="30dp"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="@string/numerical_input_hint"
+                android:visibility="gone"/>
             
             <EditText
                 android:id="@+id/habit_notes"

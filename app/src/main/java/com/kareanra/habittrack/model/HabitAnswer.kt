@@ -20,7 +20,9 @@ import androidx.room.PrimaryKey
 data class HabitAnswer(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    @ColumnInfo(name = "completed")
+    @ColumnInfo(name = "input_type")
+    val inputType: InputType,
+    @ColumnInfo(name = "answer")
     val answer: Int,
     @ColumnInfo(name = "notes")
     val notes: String?,
@@ -33,6 +35,7 @@ data class HabitAnswer(
     constructor(source: Parcel): this(
         id = source.readLong(),
         answer = source.readInt(),
+        inputType = source.readEnum<InputType>(),
         notes = source.readString(),
         yyyymmdd = source.readInt(),
         habitId = source.readLong()
@@ -40,6 +43,7 @@ data class HabitAnswer(
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeInt(answer)
+        dest.writeEnum(inputType)
         dest.writeString(notes)
         dest.writeInt(yyyymmdd)
         dest.writeLong(habitId)

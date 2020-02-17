@@ -28,5 +28,5 @@ class DbModule {
     @Provides
     @Singleton
     fun provideHabitDao(database: HabitDatabase): HabitDao =
-        database.habbitDao()
+        database.habitDao()
 }

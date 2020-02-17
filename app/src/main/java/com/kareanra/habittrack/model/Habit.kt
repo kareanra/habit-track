@@ -10,6 +10,8 @@ import androidx.room.PrimaryKey
 data class Habit(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    @ColumnInfo(name = "input_type")
+    val inputType: InputType,
     @ColumnInfo(name = "name")
     val name: String,
     @ColumnInfo(name="ordinal", index = true)
@@ -18,12 +20,14 @@ data class Habit(
 
     constructor(source: Parcel): this(
         id = source.readLong(),
+        inputType = source.readEnum<InputType>(),
         name = source.readString()!!,
         ordinal = source.readInt()
     )
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         dest.writeString(name)
+        dest.writeEnum(inputType)
         dest.writeInt(ordinal)
     }
 

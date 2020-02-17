@@ -17,7 +17,6 @@ import com.kareanra.habittrack.intent.HabitListIntent
 import com.kareanra.habittrack.model.LongWrapper
 import com.kareanra.habittrack.model.view.AnswerableHabitView
 import com.kareanra.habittrack.util.showLongToast
-import com.kareanra.habittrack.util.showShortToast
 import com.kareanra.habittrack.viewmodel.HabitListViewModel
 import com.kareanra.habittrack.viewmodel.factory.HabitListViewModelFactory
 import kotlinx.android.synthetic.main.fragment_list.*
@@ -90,6 +89,7 @@ class HabitListFragment : Fragment(), CoroutineScope {
                         viewModel.intents.offer(
                             HabitListIntent.NewAnswer(
                                 habitId = it.id,
+                                inputType = it.inputType,
                                 answer = it.answer,
                                 notes = it.notes
                             )

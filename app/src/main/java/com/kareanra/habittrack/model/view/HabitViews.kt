@@ -1,5 +1,7 @@
 package com.kareanra.habittrack.model.view
 
+import com.kareanra.habittrack.model.InputType
+
 data class HabitView(
     val id: Long,
     val name: String
@@ -13,11 +15,15 @@ data class AnswerView(
 
 data class AnswerableHabitView(
     val habit: HabitView,
+    val inputType: InputType,
     val answer: AnswerView?
 ) {
     fun habitId() =
         habit.id
 
-    fun isAnswered() =
-        answer != null
+    fun formattedAnswer() =
+        when (inputType) {
+            InputType.RANGE, InputType.NUMERICAL -> answer?.value.toString()
+            InputType.YES_NO -> answer?.value?.let { if (it == 0) "No" else "Yes" }
+        }
 }

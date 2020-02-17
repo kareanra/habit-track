@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import com.kareanra.habittrack.R
+import com.kareanra.habittrack.model.InputType
 import com.kareanra.habittrack.model.view.AnswerableHabitView
 import kotlinx.android.synthetic.main.recyclerview_item_row.view.*
 import kotlinx.coroutines.channels.Channel
@@ -35,28 +36,31 @@ class RecyclerAdapter(
         holder.bind(habit)
     }
 
-    fun redraw(state: RecyclerViewState) =
+    fun redraw(state: RecyclerViewState) {
+        // TODO: fix sliding down
         state.selectedHabit?.let { sel ->
             holders
-                .filterNot { it.habit?.habitId() == state.selectedHabit }
+                .filterNot { it.habit.habitId() == state.selectedHabit }
                 .forEach {
+                    it.renderComponents()
                     it.slideUp()
                 }
 
-            holders.first { it.habit?.habitId() == sel }
+            holders.first { it.habit.habitId() == sel }
                 .slideDown()
         } ?: run {
-           holders.forEach {
-               it.slideUp()
-           }
+            holders.forEach {
+                it.slideUp()
+            }
         }
+    }
 
     class RowViewHolder(
         v: View,
         private val userUpdates: SendChannel<RecyclerViewIntent>
     ) : RecyclerView.ViewHolder(v) {
         private var row: View = v
-        internal var habit: AnswerableHabitView? = null // TODO: lateinit
+        internal lateinit var habit: AnswerableHabitView
 
         init {
             setUpClickListeners()
@@ -66,49 +70,68 @@ class RecyclerAdapter(
             this.habit = habit
 
             row.habit_name.text =
-                if (habit.isAnswered()) {
-                    "${habit.habit.name} (Answered ${habit.answer!!.yyyymmdd})"
+                if (habit.answer != null) {
+                    "${habit.habit.name} (Answered ${habit.answer.yyyymmdd}: ${habit.formattedAnswer()})"
                 } else {
                     habit.habit.name
                 }
 
-            if (habit.isAnswered()) {
-                row.habit_seek_bar.progress = habit.answer!!.value
-                row.habit_notes.setText(habit.answer.notes)
+            renderComponents()
+        }
+
+        fun renderComponents() {
+            when (habit.inputType) {
+                InputType.RANGE -> {
+                    // TODO: dynamically set max
+                    row.habit_numerical_input.visibility = View.GONE
+                    row.habit_seek_bar.progress = habit.answer?.value ?: 0
+                    row.habit_seek_bar.visibility = View.VISIBLE
+                }
+                InputType.YES_NO -> {
+                    row.habit_seek_bar.visibility = View.GONE
+                    row.habit_numerical_input.visibility = View.GONE
+                }
+                InputType.NUMERICAL -> {
+                    row.habit_seek_bar.visibility = View.GONE
+                    row.habit_numerical_input.visibility = View.VISIBLE
+                    habit.answer?.let {
+                        row.habit_numerical_input.setText(it.value.toString())
+                    }
+                }
+            }
+            habit.answer?.let {
+                row.habit_notes.setText(it.notes)
             }
         }
 
         private fun setUpClickListeners() {
             row.habit_name.setOnClickListener {
-                habit?.let {
-                    userUpdates.offer(RecyclerViewIntent.HabitClicked(it.habitId()))
-                }
+                userUpdates.offer(RecyclerViewIntent.HabitClicked(habit.habitId()))
             }
 
             row.save_habit.setOnClickListener {
-                habit?.let {
-                    userUpdates.offer(
-                        RecyclerViewIntent.HabitSaveClicked(
-                            id = it.habitId(),
-                            answer = row.habit_seek_bar.progress,
-                            notes = row.habit_notes.text.toString()
-                        )
+                userUpdates.offer(
+                    RecyclerViewIntent.HabitSaveClicked(
+                        id = habit.habitId(),
+                        inputType = habit.inputType,
+                        answer = row.habit_seek_bar.progress,
+                        notes = row.habit_notes.text.toString()
                     )
-                }
+                )
             }
         }
 
-        internal fun slideDown(durationMillis: Long = 1000) =
+        internal fun slideDown(durationMillis: Long = 500) =
             row.habit_editing_pane.run {
                 visibility = View.VISIBLE
                 alpha = 0.0f
                 animate()
                     .setDuration(durationMillis)
                     .translationY(height.toFloat())
-                    .alpha(1.0f)
+                    .alpha(1.0f) // TODO: remove
             }
 
-        internal fun slideUp(durationMillis: Long = 200) =
+        internal fun slideUp(durationMillis: Long = 100) =
             row.habit_editing_pane.run {
                 animate()
                     .setDuration(durationMillis)
@@ -128,7 +151,12 @@ fun ViewGroup.inflate(@LayoutRes layoutRes: Int, attachToRoot: Boolean = false):
 
 sealed class RecyclerViewIntent {
     class HabitClicked(val id: Long) : RecyclerViewIntent()
-    class HabitSaveClicked(val id: Long, val answer: Int, val notes: String) : RecyclerViewIntent()
+    class HabitSaveClicked(
+        val id: Long,
+        val inputType: InputType,
+        val answer: Int,
+        val notes: String
+    ) : RecyclerViewIntent()
 }
 
 data class RecyclerViewState(

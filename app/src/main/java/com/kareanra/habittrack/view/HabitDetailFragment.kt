@@ -13,6 +13,7 @@ import com.kareanra.habittrack.R
 import com.kareanra.habittrack.dispatcher.HabitListDispatcher
 import com.kareanra.habittrack.dispatcher.HabitListReducer
 import com.kareanra.habittrack.intent.HabitListIntent
+import com.kareanra.habittrack.model.InputType
 import com.kareanra.habittrack.util.showLongToast
 import com.kareanra.habittrack.viewmodel.HabitListViewModel
 import com.kareanra.habittrack.viewmodel.factory.HabitListViewModelFactory
@@ -69,24 +70,23 @@ class HabitDetailFragment : Fragment(), CoroutineScope {
         
         habit_detail_name.doAfterTextChanged {
             // TODO: query api for existing habit with that name and post an intent and re-render
-            save_habit.isEnabled = !it.isNullOrEmpty()
+            save_habit.isEnabled = isInputValid()
+        }
+        
+        detail_radio_group.setOnCheckedChangeListener { _, _ ->
+            save_habit.isEnabled = isInputValid()
         }
 
         save_habit.setOnClickListener {
-            if (habit_detail_name.length() > 0) {
-                viewModel.intents.offer(HabitListIntent.NewHabit(habit_detail_name.text.toString()))
+            if (isInputValid()) {
+                viewModel.intents.offer(
+                    HabitListIntent.NewHabit(
+                        name = habit_detail_name.text.toString(),
+                        inputType = selectedInputType()!!
+                    )
+                )
             }
         }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // commit changes
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // other stuff
     }
 
     override fun onDestroy() {
@@ -115,4 +115,15 @@ class HabitDetailFragment : Fragment(), CoroutineScope {
             }
         }
     }
+
+    private fun isInputValid() =
+        !habit_detail_name.text.isNullOrEmpty() && detail_radio_group.checkedRadioButtonId != -1
+
+    private fun selectedInputType() =
+        when {
+            detail_radio_range.isChecked -> InputType.RANGE
+            detail_radio_yes_no.isChecked -> InputType.YES_NO
+            detail_radio_numerical.isChecked -> InputType.NUMERICAL
+            else -> null
+        }
 }
