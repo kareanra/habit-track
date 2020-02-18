@@ -67,12 +67,21 @@ class HabitDetailFragment : Fragment(), CoroutineScope {
         }?.let {
             viewModel.intents.offer(HabitListIntent.Detail(it))
         }
-        
+
+        bindViews()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        coroutineContext.cancel()
+    }
+
+    private fun bindViews() {
         habit_detail_name.doAfterTextChanged {
             // TODO: query api for existing habit with that name and post an intent and re-render
             save_habit.isEnabled = isInputValid()
         }
-        
+
         detail_radio_group.setOnCheckedChangeListener { _, _ ->
             save_habit.isEnabled = isInputValid()
         }
@@ -87,11 +96,6 @@ class HabitDetailFragment : Fragment(), CoroutineScope {
                 )
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        coroutineContext.cancel()
     }
 
     private fun render(viewState: HabitListViewState) {

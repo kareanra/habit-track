@@ -11,7 +11,22 @@ data class AnswerView(
     val yyyymmdd: Int,
     val value: Int,
     val notes: String
-)
+) {
+    fun isEmpty() =
+        this === empty
+
+    companion object {
+        private val empty =
+            AnswerView(
+                yyyymmdd = 0,
+                value = -1,
+                notes = ""
+            )
+
+        fun empty() =
+            empty
+    }
+}
 
 data class AnswerableHabitView(
     val habit: HabitView,

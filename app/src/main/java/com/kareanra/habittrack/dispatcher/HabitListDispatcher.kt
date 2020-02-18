@@ -1,6 +1,12 @@
 package com.kareanra.habittrack.dispatcher
 
 import android.content.SharedPreferences
+import com.kareanra.habittrack.dispatcher.HabitListResult.Failure
+import com.kareanra.habittrack.dispatcher.HabitListResult.Loading
+import com.kareanra.habittrack.dispatcher.HabitListResult.NoResult
+import com.kareanra.habittrack.dispatcher.HabitListResult.Results
+import com.kareanra.habittrack.dispatcher.HabitListResult.SaveSuccess
+import com.kareanra.habittrack.dispatcher.HabitListResult.SingleResult
 import com.kareanra.habittrack.intent.HabitListIntent
 import com.kareanra.habittrack.model.Habit
 import com.kareanra.habittrack.model.HabitAnswer
@@ -12,8 +18,12 @@ import com.kareanra.habittrack.model.view.HabitView
 import com.kareanra.habittrack.repository.HabitAnswerRepository
 import com.kareanra.habittrack.repository.HabitRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.toList
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,16 +49,16 @@ class HabitListDispatcher @Inject constructor(
         return flow {
             when (intent) {
                 is HabitListIntent.Load -> {
-                    emit(HabitListResult.Results(loadAll(yyyymmdd)))
+                    emit(Results(loadAll(yyyymmdd)))
                 }
                 is HabitListIntent.NewHabit -> {
-                    habitRepository.create(
+                    val newHabitId = habitRepository.create(
                         Habit(
                             inputType = intent.inputType,
                             name = intent.name
                         )
                     )
-                    emit(HabitListResult.Results(loadAll(yyyymmdd)))
+                    emit(SingleResult(habitRepository.load(newHabitId)))
                 }
                 is HabitListIntent.NewAnswer -> {
                     answerRepository.save(
@@ -60,37 +70,50 @@ class HabitListDispatcher @Inject constructor(
                             habitId = intent.habitId
                         )
                     )
-                    emit(HabitListResult.SaveSuccess)
-                    emit(HabitListResult.Results(loadAll(yyyymmdd)))
+                    emit(SaveSuccess)
+                    emit(Results(loadAll(yyyymmdd)))
                 }
                 is HabitListIntent.Detail -> {
-                    emit(HabitListResult.SingleResult(habitRepository.load(intent.habitId)))
+                    emit(SingleResult(habitRepository.load(intent.habitId)))
                 }
                 is HabitListIntent.Clear -> {
                     habitRepository.deleteAll()
-                    emit(HabitListResult.NoResult)
+                    emit(NoResult)
                 }
             }
-        }.onStart { emit(HabitListResult.Loading) }
-            .catchingAndRetrying { HabitListResult.Failure(it) }
+        }.onStart { emit(Loading) }
+            .catchingAndRetrying { Failure(it) }
     }
 
-    private suspend fun loadAll(today: Int) =
+    private suspend fun loadAll(yyyymmdd: Int): List<AnswerableHabitView> =
         habitRepository.loadAll()
+            .asFlow()
             .map {
-                AnswerableHabitView(
-                    habit = HabitView(
-                        id = it.id,
-                        name = it.name
-                    ),
-                    inputType = it.inputType,
-                    answer = answerRepository.findByHabitAndDay(it.id, today)?.let { ans ->
-                        AnswerView(
-                            yyyymmdd = ans.yyyymmdd,
-                            value = ans.answer,
-                            notes = ans.notes ?: ""
+                loadAnswer(it.id, yyyymmdd)
+                    .map { ans ->
+                        AnswerableHabitView(
+                            habit = HabitView(
+                                id = it.id,
+                                name = it.name
+                            ),
+                            inputType = it.inputType,
+                            answer = if (ans.isEmpty()) null else ans
                         )
                     }
-                )
             }
+            .flattenConcat()
+            .toList(ArrayList())
+
+    private fun loadAnswer(habitId: Long, yyyymmdd: Int): Flow<AnswerView> =
+        flow {
+            answerRepository.findByHabitAndDay(habitId, yyyymmdd)?.let {
+                emit(
+                    AnswerView(
+                        yyyymmdd = it.yyyymmdd,
+                        value = it.answer,
+                        notes = it.notes ?: ""
+                    )
+                )
+            } ?: emit(AnswerView.empty())
+        }
 }

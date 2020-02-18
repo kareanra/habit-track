@@ -110,11 +110,17 @@ class RecyclerAdapter(
             }
 
             row.save_habit.setOnClickListener {
+                val answer = when (habit.inputType) {
+                    InputType.RANGE -> row.habit_seek_bar.progress
+                    InputType.YES_NO -> 0
+                    InputType.NUMERICAL -> row.habit_numerical_input.text.toString().toInt()
+                }
+
                 userUpdates.offer(
                     RecyclerViewIntent.HabitSaveClicked(
                         id = habit.habitId(),
                         inputType = habit.inputType,
-                        answer = row.habit_seek_bar.progress,
+                        answer = answer,
                         notes = row.habit_notes.text.toString()
                     )
                 )
@@ -124,11 +130,9 @@ class RecyclerAdapter(
         internal fun slideDown(durationMillis: Long = 500) =
             row.habit_editing_pane.run {
                 visibility = View.VISIBLE
-                alpha = 0.0f
                 animate()
                     .setDuration(durationMillis)
                     .translationY(height.toFloat())
-                    .alpha(1.0f) // TODO: remove
             }
 
         internal fun slideUp(durationMillis: Long = 100) =
@@ -136,7 +140,6 @@ class RecyclerAdapter(
                 animate()
                     .setDuration(durationMillis)
                     .translationY(0.0f)
-                    .alpha(0.0f)
                     .withEndAction { visibility = View.GONE }
             }
     }
