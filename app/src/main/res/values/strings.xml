@@ -9,4 +9,5 @@
     <string name="edit_habit">Edit</string>
     <string name="habit_notes">Notes</string>
     <string name="numerical_input_hint">123</string>
+    <string name="dash">-</string>
 </resources>

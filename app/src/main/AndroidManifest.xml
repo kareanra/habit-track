@@ -20,6 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name="com.kareanra.habittrack.view.HabitDetailActivity"/>
+        <activity android:name="com.kareanra.habittrack.view.GraphViewActivity"/>
     </application>
 
 </manifest>

@@ -1,6 +1,7 @@
 package com.kareanra.habittrack.view
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -76,6 +77,11 @@ class HabitListFragment : Fragment(), CoroutineScope {
         new_habit_button.setOnClickListener {
             val directions = HabitListFragmentDirections.listToDetail(LongWrapper(null))
             new_habit_button.findNavController().navigate(directions)
+        }
+
+        graph_button.setOnClickListener {
+            val intent = Intent(context, GraphViewActivity::class.java)
+            startActivity(intent)
         }
 
         launch {

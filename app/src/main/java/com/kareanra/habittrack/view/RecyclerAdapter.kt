@@ -40,7 +40,7 @@ class RecyclerAdapter(
         // TODO: fix sliding down
         state.selectedHabit?.let { sel ->
             holders
-                .filterNot { it.habit.habitId() == state.selectedHabit }
+                .filterNot { it.habit.habitId() == sel }
                 .forEach {
                     it.renderComponents()
                     it.slideUp()
