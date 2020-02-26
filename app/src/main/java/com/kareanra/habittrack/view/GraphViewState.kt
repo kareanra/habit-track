@@ -4,19 +4,17 @@ import com.kareanra.habittrack.model.view.AnswerableHabitView
 import com.kareanra.habittrack.model.view.HabitView
 import com.kareanra.habittrack.viewmodel.BaseViewModel
 
-data class HabitListViewState(
+data class GraphViewState(
     val loading: Boolean,
-    val toastText: String?,
-    val detailHabit: HabitView?,
-    val habits: List<AnswerableHabitView>,
+    val habits: List<HabitView>,
+    val answerableHabits: List<AnswerableHabitView>,
     val error: String?
 ) : BaseViewModel.State {
     companion object {
-        val EMPTY = HabitListViewState(
+        val EMPTY = GraphViewState(
             loading = false,
-            toastText = null,
-            detailHabit = null,
             habits = emptyList(),
+            answerableHabits = emptyList(),
             error = null
         )
     }

@@ -11,8 +11,7 @@ class HabitListReducer @Inject constructor() : Reducer<HabitListViewState, Habit
         when (result) {
             is HabitListResult.Loading ->
                 existingState.copy(
-                    loading = true,
-                    habits = existingState.habits
+                    loading = true
                 )
             is HabitListResult.Results ->
                 existingState.copy(

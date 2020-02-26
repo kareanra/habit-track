@@ -3,9 +3,11 @@ package com.kareanra.habittrack.view
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.Typeface.BOLD
+import android.graphics.Typeface.NORMAL
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
@@ -17,16 +19,47 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.kareanra.habittrack.R
+import com.kareanra.habittrack.dispatcher.AnswerDispatcher
+import com.kareanra.habittrack.dispatcher.GraphViewReducer
+import com.kareanra.habittrack.dispatcher.HabitDispatcher
 import com.kareanra.habittrack.model.InputType
 import com.kareanra.habittrack.model.view.AnswerView
 import com.kareanra.habittrack.model.view.AnswerableHabitView
 import com.kareanra.habittrack.model.view.HabitView
+import com.kareanra.habittrack.viewmodel.GraphViewModel
+import com.kareanra.habittrack.viewmodel.factory.GraphViewModelFactory
 import kotlinx.android.synthetic.main.activity_graph.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 
-class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener {
+class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener, CoroutineScope {
+
+    @Inject
+    lateinit var answerDispatcher: AnswerDispatcher
+
+    @Inject
+    lateinit var habitDispatcher: HabitDispatcher
+
+    @Inject
+    lateinit var reducer: GraphViewReducer
+
+    private val viewModel: GraphViewModel by lazy {
+        ViewModelProvider(this, GraphViewModelFactory(answerDispatcher, habitDispatcher, reducer))
+            .get(GraphViewModel::class.java)
+    }
+
+    override val coroutineContext: CoroutineContext
+        get() = Job() + Dispatchers.Main
 
     private lateinit var tfLight: Typeface
+    private lateinit var tfBold: Typeface
 
     private val habitsByEntry = mutableMapOf<Entry, AnswerableHabitView>()
 
@@ -37,7 +70,8 @@ class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener {
 
         setContentView(R.layout.activity_graph)
 
-        tfLight = Typeface.create(Typeface.SERIF, BOLD)
+        tfLight = Typeface.create(Typeface.SERIF, NORMAL)
+        tfBold = Typeface.create(Typeface.SERIF, BOLD)
 
         habit_chart.apply {
             setOnChartValueSelectedListener(this@GraphViewActivity)
@@ -63,7 +97,7 @@ class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener {
         val todayDayOfWeek = dayRange.random().dayOfWeek
 
         habit_chart.xAxis.apply {
-            typeface = tfLight
+            typeface = tfBold
             granularity = 1f
             setLabelCount(7, true)
             setCenterAxisLabels(true)
@@ -81,7 +115,7 @@ class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener {
         }
 
         habit_chart.axisLeft.apply {
-            typeface = tfLight
+            typeface = tfBold
             valueFormatter = LargeValueFormatter()
             setDrawGridLines(false)
             spaceTop = 35f
@@ -95,7 +129,18 @@ class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener {
             loadData(dayRange)
         }
 
+        launch {
+            viewModel.states.consumeEach {
+                // TODO: render method
+            }
+        }
+
         loadData(dayRange)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        coroutineContext.cancel()
     }
 
     override fun onValueSelected(e: Entry, h: Highlight) {
@@ -128,18 +173,22 @@ class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener {
         val habits = listOf(
             HabitView(
                 id = 0,
+                inputType = InputType.RANGE,
                 name = "How many cups of coffee?"
             ),
             HabitView(
                 id = 1,
+                inputType = InputType.RANGE,
                 name = "How anxious?"
             ),
             HabitView(
                 id = 2,
+                inputType = InputType.RANGE,
                 name = "How elevated?"
             ),
             HabitView(
                 id = 3,
+                inputType = InputType.RANGE,
                 name = "How depressed?"
             )
         )
@@ -150,7 +199,6 @@ class GraphViewActivity : AppCompatActivity(), OnChartValueSelectedListener {
             (0..6).map {
                 AnswerableHabitView(
                     habit = habit,
-                    inputType = InputType.RANGE,
                     answer = AnswerView(
                         yyyymmdd = dates[it],
                         value = Random.nextInt(11),

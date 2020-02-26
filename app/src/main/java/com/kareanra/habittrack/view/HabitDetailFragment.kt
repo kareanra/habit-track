@@ -10,7 +10,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.kareanra.habittrack.HabitTrackApp
 import com.kareanra.habittrack.R
-import com.kareanra.habittrack.dispatcher.HabitListDispatcher
+import com.kareanra.habittrack.dispatcher.AnswerDispatcher
+import com.kareanra.habittrack.dispatcher.HabitDispatcher
 import com.kareanra.habittrack.dispatcher.HabitListReducer
 import com.kareanra.habittrack.intent.HabitListIntent
 import com.kareanra.habittrack.model.InputType
@@ -31,13 +32,16 @@ import kotlin.coroutines.CoroutineContext
 class HabitDetailFragment : Fragment(), CoroutineScope {
 
     @Inject
-    lateinit var dispatcher: HabitListDispatcher
+    lateinit var answerDispatcher: AnswerDispatcher
+
+    @Inject
+    lateinit var habitDispatcher: HabitDispatcher
 
     @Inject
     lateinit var reducer: HabitListReducer
 
     private val viewModel: HabitListViewModel by lazy {
-        ViewModelProvider(this, HabitListViewModelFactory(dispatcher, reducer))
+        ViewModelProvider(this, HabitListViewModelFactory(answerDispatcher, habitDispatcher, reducer))
             .get(HabitListViewModel::class.java)
     }
 

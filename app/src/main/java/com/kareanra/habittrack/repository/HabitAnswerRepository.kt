@@ -9,12 +9,15 @@ class HabitAnswerRepository(
     suspend fun save(answer: HabitAnswer) =
         dao.save(answer)
 
+    suspend fun findAllByDay(yyyymmdd: Int) =
+        dao.findAllByDay(yyyymmdd)
+
     suspend fun findByHabitAndDay(habitId: Long, yyyymmdd: Int) =
         dao.findByHabitAndYyyyMmDd(habitId, yyyymmdd)
 
     suspend fun findById(id: Long): HabitAnswer? =
         dao.findById(id)
 
-    suspend fun clearData() =
-        dao.deleteAll()
+    suspend fun deleteByDay(yyyymmdd: Int) =
+        dao.deleteByDay(yyyymmdd)
 }

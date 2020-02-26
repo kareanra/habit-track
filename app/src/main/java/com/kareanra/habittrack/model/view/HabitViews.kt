@@ -4,6 +4,7 @@ import com.kareanra.habittrack.model.InputType
 
 data class HabitView(
     val id: Long,
+    val inputType: InputType,
     val name: String
 )
 
@@ -30,11 +31,13 @@ data class AnswerView(
 
 data class AnswerableHabitView(
     val habit: HabitView,
-    val inputType: InputType,
     val answer: AnswerView?
 ) {
     fun habitId() =
         habit.id
+
+    val inputType
+        get() = habit.inputType
 
     fun formattedAnswer() =
         when (inputType) {

@@ -18,7 +18,7 @@ class HabitRepository(
     suspend fun deleteAll() =
         dao.deleteAll()
 
-    suspend fun load(id: Long): Habit =
+    suspend fun load(id: Long): Habit? =
         dao.load(id)
 
     suspend fun loadAll(): List<Habit> =

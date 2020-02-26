@@ -1,7 +1,7 @@
 package com.kareanra.habittrack.dispatcher
 
-import com.kareanra.habittrack.model.Habit
 import com.kareanra.habittrack.model.view.AnswerableHabitView
+import com.kareanra.habittrack.model.view.HabitView
 import com.kareanra.habittrack.viewmodel.BaseViewModel
 
 sealed class HabitListResult : BaseViewModel.Result {
@@ -9,6 +9,6 @@ sealed class HabitListResult : BaseViewModel.Result {
     object NoResult : HabitListResult()
     object SaveSuccess : HabitListResult()
     class Results(val habits: List<AnswerableHabitView>) : HabitListResult()
-    class SingleResult(val habit: Habit) : HabitListResult()
+    class SingleResult(val habit: HabitView) : HabitListResult()
     class Failure(val throwable: Throwable) : HabitListResult()
 }
